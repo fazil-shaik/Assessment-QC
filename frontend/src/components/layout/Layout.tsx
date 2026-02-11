@@ -1,96 +1,66 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import {
-    Home,
-    Settings,
-    FileText,
-    CheckSquare,
-    ShieldAlert,
-    Calculator,
-    Search,
-    Bell,
-    User
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import React, { useState, createContext, useContext } from 'react';
+import { Sidebar } from './Sidebar';
+import { Header } from './Header';
+
+// Create a context to share search state
+interface LayoutContextType {
+    searchQuery: string;
+}
+export const LayoutContext = createContext<LayoutContextType>({ searchQuery: '' });
+export const useLayout = () => useContext(LayoutContext);
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
-    const location = useLocation();
-
-    const navItems = [
-        { icon: Home, label: 'Home', path: '/' },
-        { icon: Settings, label: 'Setup', path: '/setup' },
-        { icon: FileText, label: 'Transactions', path: '/transactions' },
-        { icon: CheckSquare, label: 'QC', path: '/qc', active: true },
-        { icon: ShieldAlert, label: 'HSE', path: '/hse' },
-        { icon: Calculator, label: 'Estimation', path: '/estimation' },
-    ];
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
-            {/* Sidebar */}
-            <aside className="w-64 bg-white border-r hidden md:flex flex-col">
-                <div className="p-6 border-b">
-                    <h1 className="text-2xl font-bold text-blue-900 italic">BLUE RHINE</h1>
-                    <span className="text-xs tracking-widest text-gray-500 font-semibold block mt-1">INDUSTRIES</span>
+        <LayoutContext.Provider value={{ searchQuery }}>
+            <div className="min-h-screen bg-gray-50/50 flex overflow-hidden font-sans">
+                {/* Desktop Sidebar */}
+                <div className="hidden md:block h-screen shadow-xl z-20 sticky top-0">
+                    <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.label}
-                            to={item.path}
-                            className={cn(
-                                "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                                location.pathname.startsWith(item.path) || item.active
-                                    ? "bg-blue-50 text-blue-600"
-                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                            )}
-                        >
-                            <item.icon className="w-5 h-5" />
-                            {item.label}
-                        </Link>
-                    ))}
-                </nav>
-            </aside>
-
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col">
-                {/* Header */}
-                <header className="h-16 bg-white border-b flex items-center justify-between px-8">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-semibold text-gray-800">QC Module</h2>
-                        <div className="relative ml-8 w-96">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search Here..."
-                                className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                {/* Mobile Sidebar (Drawer) */}
+                {mobileMenuOpen && (
+                    <div className="fixed inset-0 z-50 md:hidden">
+                        <div
+                            className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+                            onClick={() => setMobileMenuOpen(false)}
+                        ></div>
+                        <div className="absolute inset-y-0 left-0 w-64 animate-in slide-in-from-left duration-200">
+                            <Sidebar
+                                collapsed={false}
+                                setCollapsed={() => { }}
+                                mobile
+                                onClose={() => setMobileMenuOpen(false)}
                             />
                         </div>
                     </div>
+                )}
 
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon">
-                            <Bell className="w-5 h-5 text-gray-600" />
-                        </Button>
-                        <div className="flex items-center gap-3 border-l pl-4">
-                            <div className="bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center overflow-hidden">
-                                <User className="w-5 h-5 text-gray-500" />
-                            </div>
-                            <div className="hidden sm:block text-right">
-                                <p className="text-sm font-medium text-gray-900">Mayank Agarwal</p>
-                                <p className="text-xs text-gray-500">Ajman, Dubai</p>
-                            </div>
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col h-screen overflow-hidden">
+                    <Header
+                        onMobileMenuToggle={() => setMobileMenuOpen(true)}
+                        onSearch={setSearchQuery}
+                    />
+
+                    <main className="flex-1 overflow-auto bg-gray-50 p-4 md:p-8 relative">
+                        {/* Background pattern for visual interest */}
+                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                            style={{
+                                backgroundImage: 'radial-gradient(#4d8b98 1px, transparent 1px)',
+                                backgroundSize: '24px 24px'
+                            }}>
                         </div>
-                    </div>
-                </header>
-
-                {/* Page Content */}
-                <main className="flex-1 p-8 overflow-auto">
-                    {children}
-                </main>
+                        <div className="relative z-0">
+                            {children}
+                        </div>
+                    </main>
+                </div>
             </div>
-        </div>
+        </LayoutContext.Provider>
     );
 };
