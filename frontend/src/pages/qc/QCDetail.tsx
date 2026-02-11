@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckpointCard, Checkpoint } from '@/components/qc/CheckpointCard';
-import { Calendar, Save, Download, FileText, CheckCircle } from 'lucide-react';
+import { Calendar, Save, Download, FileText, CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface Task {
     id: number;
@@ -18,8 +18,9 @@ interface Task {
 
 export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
     const { id } = useParams();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
-    // Mock data for now, would be fetched
     const { data: task } = useQuery<Task>({
         queryKey: ['task', id],
         queryFn: async () => {
@@ -49,6 +50,8 @@ export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
         ]
     });
 
+    const [comment, setComment] = useState("");
+
     const handleToggle = (sectionTitle: string, id: string, value: 'pass' | 'fail') => {
         setSections(prev => ({
             ...prev,
@@ -56,19 +59,56 @@ export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
         }));
     };
 
-    const handleSave = async () => {
-        // Implement save logic
-        console.log("Saving QC results", sections);
-        alert("QC Results Saved!");
+    const submitMutation = useMutation({
+        mutationFn: async () => {
+            await axios.post(`/api/qc/${id}/submit`, {
+                sections,
+                comment
+            });
+        },
+        onSuccess: () => {
+            alert("QC Results Saved!");
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
+            navigate('/qc');
+        },
+        onError: (err) => {
+            console.error(err);
+            alert("Failed to save QC results");
+        }
+    });
+
+    const handleSave = () => {
+        submitMutation.mutate();
+    };
+
+    const handlePrint = () => {
+        window.print();
     };
 
     if (!task) return <div>Loading...</div>;
 
     return (
-        <div className={`space-y-6 ${printMode ? 'p-8 bg-white' : ''}`}>
+        <div className={`space-y-6 ${printMode ? 'p-8 bg-white print-container' : ''}`}>
+            {!printMode && (
+                <Button variant="ghost" onClick={() => navigate('/qc')} className="mb-4">
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to List
+                </Button>
+            )}
+
             {/* Header Info */}
             <Card className="bg-gray-50 border-none shadow-sm">
                 <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <h1 className="text-2xl font-bold text-blue-900 mb-1">Quality Check</h1>
+                            <p className="text-sm text-gray-500">QC Inspector: <span className="font-semibold text-gray-900">Vergin BRI</span></p>
+                        </div>
+                        <div className="flex gap-2">
+                            {/* Status icons or flags */}
+                            <CheckCircle className="w-8 h-8 text-green-500" />
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
                         <div>
                             <p className="text-gray-500 mb-1">Work Order #</p>
@@ -102,6 +142,10 @@ export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
                 </CardContent>
             </Card>
 
+            <div className="w-full bg-[#3d4d6b] text-white p-2 text-center text-sm font-semibold rounded-md">
+                Inter - Departmental Process Checks
+            </div>
+
             <div className="flex flex-col md:flex-row gap-6">
                 {/* Main Checkpoints */}
                 <div className="flex-1 space-y-6">
@@ -116,18 +160,18 @@ export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
                             title="METAL FABRICATION"
                             checkpoints={sections["Metal Fabrication"]}
                             onToggle={(id, val) => handleToggle("Metal Fabrication", id, val)}
-                            colorClass="bg-[#4d8b98]"
+                            colorClass="bg-[#e45151]" // Red header as per screenshot
                         />
                         <CheckpointCard
                             title="CNC LASER CUTTING"
                             checkpoints={sections["CNC Laser Cutting"]}
                             onToggle={(id, val) => handleToggle("CNC Laser Cutting", id, val)}
-                            colorClass="bg-[#2d6a76]"
+                            colorClass="bg-[#3d4d6b]" // Dark blue
                         />
                         {/* Add more cards as needed */}
                     </div>
 
-                    <div className="bg-white p-4 rounded-lg shadow-sm border space-y-4">
+                    <div className="bg-white p-4 rounded-lg shadow-sm border space-y-4 no-print">
                         <h3 className="font-semibold text-gray-800">Files</h3>
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer">
                             <p>Drag & Drop files here or click to upload</p>
@@ -146,7 +190,7 @@ export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
 
                 {/* Sidebar History & Comments */}
                 <div className="w-full md:w-80 space-y-6">
-                    <Card>
+                    <Card className="no-print">
                         <CardContent className="p-4 space-y-4">
                             <h3 className="font-semibold">Quality Check History</h3>
                             <div className="space-y-4 relative pl-4 border-l-2 border-gray-100">
@@ -176,15 +220,26 @@ export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
                                     </div>
                                 </div>
                             </div>
-                            <textarea className="w-full border rounded p-2 text-sm" placeholder="Add a comment..."></textarea>
+                            <textarea
+                                className="w-full border rounded p-2 text-sm no-print"
+                                placeholder="Add a comment..."
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                            ></textarea>
+                            {/* Display comment in print mode */}
+                            <div className="hidden print:block border p-2 text-sm bg-gray-50 min-h-[50px]">
+                                {comment}
+                            </div>
                         </CardContent>
                     </Card>
 
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleSave}>
-                        <Save className="w-4 h-4 mr-2" /> Save Results
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 no-print" onClick={handleSave} disabled={submitMutation.isPending}>
+                        <Save className="w-4 h-4 mr-2" /> {submitMutation.isPending ? 'Saving...' : 'Save Results'}
                     </Button>
 
-                    {printMode && <Button className="w-full" variant="outline"> <Download className="w-4 h-4 mr-2" /> Print PDF </Button>}
+                    <Button className="w-full no-print" variant="outline" onClick={handlePrint}>
+                        <Download className="w-4 h-4 mr-2" /> Print PDF
+                    </Button>
                 </div>
             </div>
         </div>
