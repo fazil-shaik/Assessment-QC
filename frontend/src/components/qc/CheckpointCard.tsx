@@ -1,9 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Check, X, MessageSquare } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageUpload } from '@/components/ui/ImageUpload';
-import { Textarea } from '@/components/ui/textarea'; // We might need to create this or use simple textarea
 
 // Basic Textarea component if not exists, inline for simplicity or assuming standard HTML
 const SimpleTextarea = (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
