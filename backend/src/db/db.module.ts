@@ -1,7 +1,10 @@
 import { Module, Global } from '@nestjs/common';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from './schema';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export const DRIZZLE = 'DRIZZLE';
 
@@ -11,8 +14,12 @@ export const DRIZZLE = 'DRIZZLE';
         {
             provide: DRIZZLE,
             useFactory: () => {
-                const sqlite = new Database('sqlite.db');
-                return drizzle(sqlite, { schema });
+                const connectionString = process.env.DATABASE_URL;
+                if (!connectionString) {
+                    throw new Error('DATABASE_URL is not set');
+                }
+                const client = postgres(connectionString);
+                return drizzle(client, { schema });
             },
         },
     ],
