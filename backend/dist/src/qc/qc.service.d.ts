@@ -1,8 +1,8 @@
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '../db/schema';
 export declare class QCService {
     private db;
-    constructor(db: BetterSQLite3Database<typeof schema>);
+    constructor(db: PostgresJsDatabase<typeof schema>);
     submitQC(taskId: number, data: any): Promise<{
         success: boolean;
     }>;

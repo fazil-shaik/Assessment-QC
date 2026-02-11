@@ -48,7 +48,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.QCService = void 0;
 const common_1 = require("@nestjs/common");
 const db_module_1 = require("../db/db.module");
-const better_sqlite3_1 = require("drizzle-orm/better-sqlite3");
+const postgres_js_1 = require("drizzle-orm/postgres-js");
 const schema = __importStar(require("../db/schema"));
 const drizzle_orm_1 = require("drizzle-orm");
 let QCService = class QCService {
@@ -70,11 +70,13 @@ let QCService = class QCService {
             }
         }
         if (results.length > 0) {
-            await this.db.delete(schema.qcResults).where((0, drizzle_orm_1.eq)(schema.qcResults.taskId, taskId));
-            await this.db.insert(schema.qcResults).values(results);
-            await this.db.update(schema.tasks)
-                .set({ status: 'Completed' })
-                .where((0, drizzle_orm_1.eq)(schema.tasks.id, taskId));
+            await this.db.transaction(async (tx) => {
+                await tx.delete(schema.qcResults).where((0, drizzle_orm_1.eq)(schema.qcResults.taskId, taskId));
+                await tx.insert(schema.qcResults).values(results);
+                await tx.update(schema.tasks)
+                    .set({ status: 'Completed' })
+                    .where((0, drizzle_orm_1.eq)(schema.tasks.id, taskId));
+            });
         }
         return { success: true };
     }
@@ -83,6 +85,6 @@ exports.QCService = QCService;
 exports.QCService = QCService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)(db_module_1.DRIZZLE)),
-    __metadata("design:paramtypes", [better_sqlite3_1.BetterSQLite3Database])
+    __metadata("design:paramtypes", [postgres_js_1.PostgresJsDatabase])
 ], QCService);
 //# sourceMappingURL=qc.service.js.map

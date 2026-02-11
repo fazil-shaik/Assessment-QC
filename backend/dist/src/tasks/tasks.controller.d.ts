@@ -12,7 +12,7 @@ export declare class TasksController {
         status: string | null;
         assignedTo: string | null;
         quantity: number | null;
-        createdAt: string | null;
+        createdAt: Date | null;
     }[]>;
     findOne(id: number): Promise<{
         id: number;
@@ -24,6 +24,6 @@ export declare class TasksController {
         status: string | null;
         assignedTo: string | null;
         quantity: number | null;
-        createdAt: string | null;
-    } | undefined>;
+        createdAt: Date | null;
+    }>;
 }

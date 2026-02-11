@@ -36,48 +36,62 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const better_sqlite3_1 = require("drizzle-orm/better-sqlite3");
-const better_sqlite3_2 = __importDefault(require("better-sqlite3"));
+const postgres_js_1 = require("drizzle-orm/postgres-js");
+const postgres_1 = __importDefault(require("postgres"));
 const schema = __importStar(require("./schema"));
-const sqlite = new better_sqlite3_2.default("sqlite.db");
-const db = (0, better_sqlite3_1.drizzle)(sqlite, { schema });
+const dotenv = __importStar(require("dotenv"));
+dotenv.config();
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+    throw new Error("DATABASE_URL is not set");
+}
+const client = (0, postgres_1.default)(connectionString);
+const db = (0, postgres_js_1.drizzle)(client, { schema });
 async function seed() {
     console.log("Seeding database...");
-    await db.delete(schema.tasks);
-    await db.delete(schema.qcResults);
-    await db.insert(schema.tasks).values([
-        {
-            workOrder: "WO-BRIDIP-22847",
-            project: "BRI UAE-J26481-07-25",
-            projectNo: "BRI-UAE-QC-12210",
-            department: "Polishing",
-            signType: "JCD Rework",
-            status: "Assigned",
-            assignedTo: "Vergin BRI",
-            quantity: 10,
-        },
-        {
-            workOrder: "WO-BRIDIP-22844",
-            project: "BRI UAE-J2641-07-25",
-            projectNo: "BRI-UAE-QC-12218",
-            department: "Sanding",
-            signType: "Order Point Signage",
-            status: "Assigned",
-            assignedTo: "Arshad",
-            quantity: 10,
-        },
-        {
-            workOrder: "WO-BRIDIP-22844",
-            project: "BRI UAE-J26475-07-25",
-            projectNo: "BRI-UAE-QC-12218",
-            department: "Fabrication",
-            signType: "Replacement to damaged...",
-            status: "Pending",
-            assignedTo: "Not Assigned",
-            quantity: 1,
-        }
-    ]);
-    console.log("Seeding complete!");
+    try {
+        await db.delete(schema.qcResults);
+        await db.delete(schema.tasks);
+        await db.insert(schema.tasks).values([
+            {
+                workOrder: "WO-BRIDIP-22847",
+                project: "BRI UAE-J26481-07-25",
+                projectNo: "BRI-UAE-QC-12210",
+                department: "Polishing",
+                signType: "JCD Rework",
+                status: "Assigned",
+                assignedTo: "Vergin BRI",
+                quantity: 10,
+            },
+            {
+                workOrder: "WO-BRIDIP-22844",
+                project: "BRI UAE-J2641-07-25",
+                projectNo: "BRI-UAE-QC-12218",
+                department: "Sanding",
+                signType: "Order Point Signage",
+                status: "Assigned",
+                assignedTo: "Arshad",
+                quantity: 10,
+            },
+            {
+                workOrder: "WO-BRIDIP-22844",
+                project: "BRI UAE-J26475-07-25",
+                projectNo: "BRI-UAE-QC-12218",
+                department: "Fabrication",
+                signType: "Replacement to damaged...",
+                status: "Pending",
+                assignedTo: "Not Assigned",
+                quantity: 1,
+            }
+        ]);
+        console.log("Seeding complete!");
+    }
+    catch (error) {
+        console.error("Error seeding database:", error);
+    }
+    finally {
+        await client.end();
+    }
 }
 seed().catch((err) => {
     console.error("Seeding failed", err);

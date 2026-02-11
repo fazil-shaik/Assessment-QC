@@ -48,7 +48,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TasksService = void 0;
 const common_1 = require("@nestjs/common");
 const db_module_1 = require("../db/db.module");
-const better_sqlite3_1 = require("drizzle-orm/better-sqlite3");
+const postgres_js_1 = require("drizzle-orm/postgres-js");
 const schema = __importStar(require("../db/schema"));
 const drizzle_orm_1 = require("drizzle-orm");
 let TasksService = class TasksService {
@@ -57,20 +57,20 @@ let TasksService = class TasksService {
         this.db = db;
     }
     async findAll() {
-        return this.db.select().from(schema.tasks).all();
+        return this.db.select().from(schema.tasks);
     }
     async findOne(id) {
-        const result = this.db.select().from(schema.tasks).where((0, drizzle_orm_1.eq)(schema.tasks.id, id)).get();
-        return result;
+        const result = await this.db.select().from(schema.tasks).where((0, drizzle_orm_1.eq)(schema.tasks.id, id));
+        return result[0];
     }
     async getQCResults(taskId) {
-        return this.db.select().from(schema.qcResults).where((0, drizzle_orm_1.eq)(schema.qcResults.taskId, taskId)).all();
+        return this.db.select().from(schema.qcResults).where((0, drizzle_orm_1.eq)(schema.qcResults.taskId, taskId));
     }
 };
 exports.TasksService = TasksService;
 exports.TasksService = TasksService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)(db_module_1.DRIZZLE)),
-    __metadata("design:paramtypes", [better_sqlite3_1.BetterSQLite3Database])
+    __metadata("design:paramtypes", [postgres_js_1.PostgresJsDatabase])
 ], TasksService);
 //# sourceMappingURL=tasks.service.js.map

@@ -1,8 +1,8 @@
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '../db/schema';
 export declare class TasksService {
     private db;
-    constructor(db: BetterSQLite3Database<typeof schema>);
+    constructor(db: PostgresJsDatabase<typeof schema>);
     findAll(): Promise<{
         id: number;
         workOrder: string;
@@ -13,7 +13,7 @@ export declare class TasksService {
         status: string | null;
         assignedTo: string | null;
         quantity: number | null;
-        createdAt: string | null;
+        createdAt: Date | null;
     }[]>;
     findOne(id: number): Promise<{
         id: number;
@@ -25,8 +25,8 @@ export declare class TasksService {
         status: string | null;
         assignedTo: string | null;
         quantity: number | null;
-        createdAt: string | null;
-    } | undefined>;
+        createdAt: Date | null;
+    }>;
     getQCResults(taskId: number): Promise<{
         id: number;
         taskId: number | null;
@@ -35,6 +35,6 @@ export declare class TasksService {
         status: string | null;
         comment: string | null;
         imagePath: string | null;
-        submittedAt: string | null;
+        submittedAt: Date | null;
     }[]>;
 }
