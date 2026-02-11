@@ -25,7 +25,7 @@ export class TasksController {
         return this.tasksService.create({
             ...body,
             status: 'Pending',
-            createdAt: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+            createdAt: new Date(),
             assignedTo: 'Unassigned',
             projectNo: `P-${Math.floor(Math.random() * 1000)}`
         });
