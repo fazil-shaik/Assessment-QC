@@ -69,11 +69,15 @@ export const QCList = () => {
                                     <td className="px-6 py-4">{task.department}</td>
                                     <td className="px-6 py-4">{task.signType}</td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded text-xs font-semibold 
-                      ${task.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                task.status === 'Assigned' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+                                        <Badge variant={
+                                            task.status === 'Pending' ? 'secondary' :
+                                                task.status === 'Assigned' ? 'default' : 'outline'
+                                        } className={
+                                            task.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-none' :
+                                                task.status === 'Assigned' ? 'bg-blue-100 text-blue-800 hover:bg-blue-200 border-none' : 'bg-green-100 text-green-800 hover:bg-green-200 border-none'
+                                        }>
                                             {task.status}
-                                        </span>
+                                        </Badge>
                                     </td>
                                     <td className="px-6 py-4">{task.assignedTo}</td>
                                     <td className="px-6 py-4">
