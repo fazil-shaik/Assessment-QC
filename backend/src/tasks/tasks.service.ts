@@ -21,4 +21,10 @@ export class TasksService {
     async getQCResults(taskId: number) {
         return this.db.select().from(schema.qcResults).where(eq(schema.qcResults.taskId, taskId));
     }
+
+    async assignTask(id: number, assignee: string) {
+        return this.db.update(schema.tasks)
+            .set({ status: 'Assigned', assignedTo: assignee })
+            .where(eq(schema.tasks.id, id));
+    }
 }

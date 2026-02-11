@@ -4,8 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { CheckpointCard, Checkpoint } from '@/components/qc/CheckpointCard';
-import { Calendar, Save, Download, FileText, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Calendar, Save, Download, ArrowLeft, Printer, User, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Task {
     id: number;
@@ -14,6 +16,8 @@ interface Task {
     signType: string;
     quantity: number;
     projectNo: string;
+    status: string;
+    assignedTo: string;
 }
 
 export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
@@ -50,34 +54,53 @@ export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
         ]
     });
 
-    const [comment, setComment] = useState("");
-
-    const handleToggle = (sectionTitle: string, id: string, value: 'pass' | 'fail') => {
+    const handleUpdate = (sectionTitle: string, id: string, updates: Partial<Checkpoint>) => {
         setSections(prev => ({
             ...prev,
-            [sectionTitle]: prev[sectionTitle].map(cp => cp.id === id ? { ...cp, value } : cp)
+            [sectionTitle]: prev[sectionTitle].map(cp => cp.id === id ? { ...cp, ...updates } : cp)
         }));
     };
 
     const submitMutation = useMutation({
         mutationFn: async () => {
+            // Validate: All checked items must have comment and image
+            for (const section of Object.values(sections)) {
+                for (const cp of section) {
+                    if (cp.value && (!cp.comment || !cp.image)) {
+                        throw new Error(`Missing evidence for ${cp.label}`);
+                    }
+                }
+            }
+
             await axios.post(`/api/qc/${id}/submit`, {
                 sections,
-                comment
+                comment: "Detailed QC Completed"
             });
         },
         onSuccess: () => {
-            alert("QC Results Saved!");
+            alert("QC Results Saved & Submitted!");
             queryClient.invalidateQueries({ queryKey: ['tasks'] });
             navigate('/qc');
         },
-        onError: (err) => {
+        onError: (err: any) => {
             console.error(err);
-            alert("Failed to save QC results");
+            alert(err.message || "Failed to submit results");
+        }
+    });
+
+    const assignMutation = useMutation({
+        mutationFn: async () => {
+            await axios.post(`/api/tasks/${id}/assign`, { assignee: "Me" }); // In real app, current user
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['task', id] });
         }
     });
 
     const handleSave = () => {
+        // Basic check if all items are filled (optional based on workflow strictness)
+        // For now, allow saving partials? Or enforce all? 
+        // Let's enforce that IF a value is set, it needs evidence.
         submitMutation.mutate();
     };
 
@@ -85,162 +108,111 @@ export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
         window.print();
     };
 
-    if (!task) return <div>Loading...</div>;
+    if (!task) return <div className="p-8 flex justify-center">Loading...</div>;
+
+    const isAssignedToMe = task.status === 'Assigned' || task.status === 'Completed'; // Simplified check
 
     return (
-        <div className={`space-y-6 ${printMode ? 'p-8 bg-white print-container' : ''}`}>
+        <div className={cn("max-w-6xl mx-auto space-y-8", printMode ? 'p-8 bg-white print-container' : 'p-6')}>
             {!printMode && (
-                <Button variant="ghost" onClick={() => navigate('/qc')} className="mb-4">
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to List
-                </Button>
+                <div className="flex items-center justify-between">
+                    <Button variant="ghost" onClick={() => navigate('/qc')} className="pl-0 hover:bg-transparent hover:text-blue-600">
+                        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Task List
+                    </Button>
+                    <div className="flex gap-2">
+                        {task.status === 'Pending' && (
+                            <Button onClick={() => assignMutation.mutate()} disabled={assignMutation.isPending} className="bg-blue-600">
+                                Assign to Me
+                            </Button>
+                        )}
+                        <Button variant="outline" onClick={handlePrint} className="gap-2">
+                            <Printer className="w-4 h-4" /> Print Report
+                        </Button>
+                    </div>
+                </div>
             )}
 
             {/* Header Info */}
-            <Card className="bg-gray-50 border-none shadow-sm">
-                <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
+            <Card className="border-none shadow-md bg-white overflow-hidden">
+                <div className="h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                <CardContent className="p-8">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-blue-900 mb-1">Quality Check</h1>
-                            <p className="text-sm text-gray-500">QC Inspector: <span className="font-semibold text-gray-900">Vergin BRI</span></p>
+                            <div className="flex items-center gap-3 mb-2">
+                                <h1 className="text-3xl font-bold text-gray-900">QC Inspection</h1>
+                                <Badge variant={task.status === 'Completed' ? 'default' : 'secondary'} className="text-sm px-3 py-1">
+                                    {task.status}
+                                </Badge>
+                            </div>
+                            <p className="text-gray-500 flex items-center gap-2">
+                                <User className="w-4 h-4" />
+                                Inspector: <span className="font-medium text-gray-900">{task.assignedTo || 'Unassigned'}</span>
+                            </p>
                         </div>
-                        <div className="flex gap-2">
-                            {/* Status icons or flags */}
-                            <CheckCircle className="w-8 h-8 text-green-500" />
+                        <div className="text-right">
+                            <p className="text-sm text-gray-500 mb-1">Work Order</p>
+                            <p className="text-2xl font-mono font-bold text-gray-900">{task.workOrder}</p>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8 text-sm pt-6 border-t">
                         <div>
-                            <p className="text-gray-500 mb-1">Work Order #</p>
-                            <p className="font-semibold">{task.workOrder}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500 mb-1">Date</p>
-                            <p className="font-semibold flex items-center gap-2"><Calendar className="w-4 h-4" /> 31-01-2024</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500 mb-1">Sign Type</p>
-                            <p className="font-semibold">{task.signType}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500 mb-1">Quantity</p>
-                            <p className="font-semibold">{task.quantity}</p>
+                            <p className="text-gray-500 mb-1">Project Name</p>
+                            <p className="font-semibold text-base">{task.project}</p>
                         </div>
                         <div>
                             <p className="text-gray-500 mb-1">Project #</p>
-                            <p className="font-semibold">{task.projectNo || 'N/A'}</p>
+                            <p className="font-semibold text-base">{task.projectNo || 'N/A'}</p>
                         </div>
                         <div>
-                            <p className="text-gray-500 mb-1">Partial or Full</p>
-                            <p className="font-semibold">Full</p>
+                            <p className="text-gray-500 mb-1">Sign Type</p>
+                            <p className="font-semibold text-base">{task.signType}</p>
                         </div>
-                        <div className="col-span-2">
-                            <p className="text-gray-500 mb-1">Project Name</p>
-                            <p className="font-semibold">{task.project}</p>
+                        <div>
+                            <p className="text-gray-500 mb-1">Quantity</p>
+                            <p className="font-semibold text-base">{task.quantity}</p>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="w-full bg-[#3d4d6b] text-white p-2 text-center text-sm font-semibold rounded-md">
-                Inter - Departmental Process Checks
+            {!isAssignedToMe && !printMode && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-md flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600" />
+                    <p className="text-yellow-800 font-medium">Please assign this task to yourself to begin the inspection.</p>
+                </div>
+            )}
+
+            {/* Checkpoints */}
+            <div className={cn("grid grid-cols-1 gap-8", !isAssignedToMe && "opacity-50 pointer-events-none")}>
+                {Object.entries(sections).map(([title, items]) => (
+                    <CheckpointCard
+                        key={title}
+                        title={title}
+                        checkpoints={items}
+                        onUpdate={(id, updates) => handleUpdate(title, id, updates)}
+                        colorClass={
+                            title.includes("Moulding") ? "text-blue-600" :
+                                title.includes("Fabrication") ? "text-red-600" : "text-purple-600"
+                        }
+                        readOnly={task.status === 'Completed'}
+                    />
+                ))}
             </div>
 
-            <div className="flex flex-col md:flex-row gap-6">
-                {/* Main Checkpoints */}
-                <div className="flex-1 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <CheckpointCard
-                            title="LETTER MOULDING"
-                            checkpoints={sections["Letter Moulding"]}
-                            onToggle={(id, val) => handleToggle("Letter Moulding", id, val)}
-                            colorClass="bg-[#4d8b98]"
-                        />
-                        <CheckpointCard
-                            title="METAL FABRICATION"
-                            checkpoints={sections["Metal Fabrication"]}
-                            onToggle={(id, val) => handleToggle("Metal Fabrication", id, val)}
-                            colorClass="bg-[#e45151]" // Red header as per screenshot
-                        />
-                        <CheckpointCard
-                            title="CNC LASER CUTTING"
-                            checkpoints={sections["CNC Laser Cutting"]}
-                            onToggle={(id, val) => handleToggle("CNC Laser Cutting", id, val)}
-                            colorClass="bg-[#3d4d6b]" // Dark blue
-                        />
-                        {/* Add more cards as needed */}
-                    </div>
-
-                    <div className="bg-white p-4 rounded-lg shadow-sm border space-y-4 no-print">
-                        <h3 className="font-semibold text-gray-800">Files</h3>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer">
-                            <p>Drag & Drop files here or click to upload</p>
-                        </div>
-                        <div className="mt-4 space-y-2">
-                            <div className="bg-blue-50 p-2 rounded flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2">
-                                    <FileText className="w-4 h-4 text-blue-500" />
-                                    <span>metalfabrication.jpg</span>
-                                </div>
-                                <span className="text-xs text-gray-500">2.5 mb</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Sidebar History & Comments */}
-                <div className="w-full md:w-80 space-y-6">
-                    <Card className="no-print">
-                        <CardContent className="p-4 space-y-4">
-                            <h3 className="font-semibold">Quality Check History</h3>
-                            <div className="space-y-4 relative pl-4 border-l-2 border-gray-100">
-                                <div className="relative">
-                                    <div className="absolute -left-[21px] bg-gray-400 rounded-full w-3 h-3 top-1"></div>
-                                    <p className="text-xs text-gray-500">March 2, 2024</p>
-                                    <p className="text-sm font-medium">BRI UAE-J7775-01-24</p>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute -left-[21px] bg-yellow-500 rounded-full w-3 h-3 top-1"></div>
-                                    <p className="text-xs text-gray-500">February 20, 2024</p>
-                                    <p className="text-sm font-medium">BRI UAE-J7774-01-24</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-4 space-y-4">
-                            <h3 className="font-semibold">Comments</h3>
-                            <div className="space-y-4">
-                                <div className="flex gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0"></div>
-                                    <div>
-                                        <p className="text-sm font-medium">David Warner</p>
-                                        <p className="text-xs text-gray-500">Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <textarea
-                                className="w-full border rounded p-2 text-sm no-print"
-                                placeholder="Add a comment..."
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                            ></textarea>
-                            {/* Display comment in print mode */}
-                            <div className="hidden print:block border p-2 text-sm bg-gray-50 min-h-[50px]">
-                                {comment}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 no-print" onClick={handleSave} disabled={submitMutation.isPending}>
-                        <Save className="w-4 h-4 mr-2" /> {submitMutation.isPending ? 'Saving...' : 'Save Results'}
+            {/* Footer Actions */}
+            <div className="flex justify-end pt-8 pb-16 no-print">
+                {task.status !== 'Completed' && (
+                    <Button
+                        size="lg"
+                        className="bg-green-600 hover:bg-green-700 text-white min-w-[200px]"
+                        onClick={handleSave}
+                        disabled={!isAssignedToMe || submitMutation.isPending}
+                    >
+                        <Save className="w-5 h-5 mr-2" />
+                        {submitMutation.isPending ? 'Submitting...' : 'Complete Inspection'}
                     </Button>
-
-                    <Button className="w-full no-print" variant="outline" onClick={handlePrint}>
-                        <Download className="w-4 h-4 mr-2" /> Print PDF
-                    </Button>
-                </div>
+                )}
             </div>
         </div>
     );
