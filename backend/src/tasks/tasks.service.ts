@@ -27,4 +27,8 @@ export class TasksService {
             .set({ status: 'Assigned', assignedTo: assignee })
             .where(eq(schema.tasks.id, id));
     }
+
+    async create(data: typeof schema.tasks.$inferInsert) {
+        return this.db.insert(schema.tasks).values(data).returning();
+    }
 }

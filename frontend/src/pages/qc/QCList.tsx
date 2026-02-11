@@ -7,6 +7,7 @@ import axios from 'axios';
 import { Loader2, Plus, ArrowRight, UserCheck, Calendar, MapPin, Building2, Ticket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLayout } from '@/components/layout/Layout';
+import { CreateTaskDialog } from '@/components/qc/CreateTaskDialog';
 
 interface Task {
     id: number;
@@ -62,9 +63,7 @@ export const QCList = () => {
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">QC Tasks</h1>
                     <p className="text-gray-500 mt-1">Manage inspections and track quality across projects</p>
                 </div>
-                <Button className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-full px-6 transition-transform active:scale-95">
-                    <Plus className="w-4 h-4 mr-2" /> Create New Task
-                </Button>
+                <CreateTaskDialog />
             </div>
 
             {/* Mobile/Tablet Card View - Visible on small screens */}

@@ -19,4 +19,15 @@ export class TasksController {
     assign(@Param('id', ParseIntPipe) id: number, @Body() body: { assignee: string }) {
         return this.tasksService.assignTask(id, body.assignee);
     }
+
+    @Post()
+    create(@Body() body: any) {
+        return this.tasksService.create({
+            ...body,
+            status: 'Pending',
+            createdAt: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+            assignedTo: 'Unassigned',
+            projectNo: `P-${Math.floor(Math.random() * 1000)}`
+        });
+    }
 }
