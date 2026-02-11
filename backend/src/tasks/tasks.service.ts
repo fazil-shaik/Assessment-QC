@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE } from '../db/db.module';
-import { DrizzleQL } from 'drizzle-orm/better-sqlite3'; // Typo? No, type is BetterSQLite3Database
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
 import { eq } from 'drizzle-orm';

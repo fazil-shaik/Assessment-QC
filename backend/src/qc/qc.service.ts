@@ -10,7 +10,7 @@ export class QCService {
 
     async submitQC(taskId: number, data: any) {
         // data.sections is map of section -> checkpoints
-        const results = [];
+        const results: (typeof schema.qcResults.$inferInsert)[] = [];
         for (const [section, checkpoints] of Object.entries(data.sections)) {
             for (const cp of (checkpoints as any[])) {
                 results.push({
