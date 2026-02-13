@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Body, Controller, Post, Param, ParseIntPipe } from '@nestjs/common';
 import { QCService } from './qc.service';
 
