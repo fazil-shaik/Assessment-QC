@@ -17,7 +17,8 @@ export class QCService {
                     section,
                     checkpoint: cp.label,
                     status: cp.value || 'Pending',
-                    comment: data.comment,
+                    comment: cp.comment,
+                    imagePath: cp.image,
                 });
             }
         }

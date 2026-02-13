@@ -15,7 +15,10 @@ export class TasksService {
 
     async findOne(id: number) {
         const result = await this.db.select().from(schema.tasks).where(eq(schema.tasks.id, id));
-        return result[0];
+        if (!result[0]) return null;
+
+        const qcResults = await this.getQCResults(id);
+        return { ...result[0], qcResults };
     }
 
     async getQCResults(taskId: number) {

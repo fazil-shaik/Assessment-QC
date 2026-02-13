@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
@@ -19,21 +19,19 @@ interface Task {
     projectNo: string;
     status: string;
     assignedTo: string;
+    qcResults?: {
+        section: string;
+        checkpoint: string;
+        status: 'pass' | 'fail' | null;
+        comment?: string;
+        imagePath?: string;
+    }[];
 }
 
 export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-
-    const { data: task } = useQuery<Task>({
-        queryKey: ['task', id],
-        queryFn: async () => {
-            const res = await axios.get(`/api/tasks/${id}`);
-            return res.data;
-        },
-        enabled: !!id
-    });
 
     const [sections, setSections] = useState<{ [key: string]: Checkpoint[] }>({
         "Letter Moulding": [
@@ -54,6 +52,40 @@ export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
             { id: "cl3", label: "Cutting Quality", value: null }
         ]
     });
+
+    // Populate state from saved results when task data loads
+    const { data: task } = useQuery<Task>({
+        queryKey: ['task', id],
+        queryFn: async () => {
+            const res = await axios.get(`/api/tasks/${id}`);
+            return res.data;
+        },
+        enabled: !!id
+    });
+
+    useEffect(() => {
+        if (task?.qcResults && task.qcResults.length > 0) {
+            setSections(prevSections => {
+                const newSections = { ...prevSections };
+                task.qcResults?.forEach(result => {
+                    if (newSections[result.section]) {
+                        newSections[result.section] = newSections[result.section].map(cp => {
+                            if (cp.label === result.checkpoint) {
+                                return {
+                                    ...cp,
+                                    value: result.status,
+                                    comment: result.comment,
+                                    image: result.imagePath
+                                };
+                            }
+                            return cp;
+                        });
+                    }
+                });
+                return newSections;
+            });
+        }
+    }, [task]);
 
     const handleUpdate = (sectionTitle: string, id: string, updates: Partial<Checkpoint>) => {
         setSections(prev => ({
