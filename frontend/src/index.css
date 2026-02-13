@@ -95,13 +95,25 @@
 
   aside,
   header,
-  button.no-print {
+  button.no-print,
+  .no-print {
     display: none !important;
   }
 
   .print-container {
     padding: 0 !important;
     background: white !important;
+  }
+
+  /* Reset layout constraints for print */
+  body,
+  #root,
+  .flex-col,
+  .overflow-hidden,
+  .overflow-auto {
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
   }
 
   /* Hide sidebar in PC/Tablet mode if it's not hidden by Layout structure */

@@ -134,8 +134,17 @@ export const QCDetail = ({ printMode = false }: { printMode?: boolean }) => {
     };
 
     const handlePrint = () => {
-        window.print();
+        // Open the dedicated print view in a new window/tab
+        window.open(`/print/${id}`, '_blank');
     };
+
+    useEffect(() => {
+        if (printMode && task) {
+            // Auto-print if we are in print mode
+            const timer = setTimeout(() => window.print(), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [printMode, task]);
 
     if (!task) return <div className="p-8 flex justify-center">Loading...</div>;
 
