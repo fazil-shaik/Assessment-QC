@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckpointCard, Checkpoint } from '@/components/qc/CheckpointCard';
 import { Save, ArrowLeft, Printer, User, AlertCircle, Building, Hash, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useLayout } from '@/components/layout/Layout'; // To access any layout context if needed
+// import { useLayout } from '@/components/layout/Layout'; // To access any layout context if needed
 
 interface Task {
     id: number;

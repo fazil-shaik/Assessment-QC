@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Loader2, Plus, ArrowRight, UserCheck, Calendar, MapPin, Building2, Ticket } from 'lucide-react';
+import { Loader2, ArrowRight, UserCheck, Calendar, MapPin, Building2, Ticket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLayout } from '@/components/layout/Layout';
 import { CreateTaskDialog } from '@/components/qc/CreateTaskDialog';
