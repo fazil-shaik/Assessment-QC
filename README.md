@@ -31,7 +31,8 @@ A comprehensive Quality Control (QC) management system built with a modern tech 
 *   **NestJS** (Framework)
 *   **PostgreSQL** (Database via Neon)
 *   **Drizzle ORM** (Type-safe SQL)
-*   **Multer** (File Uploads)
+*   **Cloudinary** (Image Storage)
+*   **Multer** (File Handling)
 
 ---
 
@@ -57,6 +58,11 @@ npm install
 Create a `.env` file in `backend/` and add your database connection string:
 ```bash
 DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
+
+# Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME="your_cloud_name"
+CLOUDINARY_API_KEY="your_api_key"
+CLOUDINARY_API_SECRET="your_api_secret"
 ```
 
 **Database Migration**:
@@ -118,7 +124,7 @@ npm run dev
 │   │   ├── qc/         # QC Logic & Endpoints
 │   │   ├── tasks/      # Task Management
 │   │   └── uploads/    # File handling
-│   └── uploads/        # Local storage for images
+│   │   ├── uploads/    # Cloudinary Integration
 │
 └── frontend/           # React UI
     ├── src/
