@@ -1,32 +1,18 @@
-/* eslint-disable prettier/prettier */
 import { Controller, Post, UseInterceptors, UploadedFile, Get, Param, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import type { Response } from 'express';
-import { join } from 'path';
+import { CloudinaryService } from './cloudinary.service';
 
 @Controller('uploads')
 export class UploadsController {
-    @Post()
-    @UseInterceptors(FileInterceptor('file', {
-        storage: diskStorage({
-            destination: './tmp',
-            filename: (req, file, cb) => {
-                const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
-                return cb(null, `${randomName}${extname(file.originalname)}`);
-            }
-        })
-    }))
-    uploadFile(@UploadedFile() file: Express.Multer.File) {
-        return {
-            url: `/api/uploads/${file.filename}`,
-            filename: file.filename
-        };
-    }
+    constructor(private readonly cloudinaryService: CloudinaryService) { }
 
-    @Get(':filename')
-    serveFile(@Param('filename') filename: string, @Res() res: Response) {
-        return res.sendFile(join(process.cwd(), 'uploads', filename));
+    @Post()
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadFile(@UploadedFile() file: Express.Multer.File) {
+        const result = await this.cloudinaryService.uploadImage(file);
+        return {
+            url: result.secure_url,
+            filename: result.public_id
+        };
     }
 }
