@@ -15,6 +15,7 @@ export default defineConfig({
       '/api': {
         target: 'https://assessment-qc.vercel.app',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
