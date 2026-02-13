@@ -6,9 +6,7 @@ import {
     CheckSquare,
     ShieldAlert,
     Calculator,
-    ChevronLeft,
-    ChevronRight,
-    LogOut
+    ChevronLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -20,7 +18,7 @@ interface SidebarProps {
     onClose?: () => void;
 }
 
-export const Sidebar = ({ collapsed, setCollapsed, mobile, onClose }: SidebarProps) => {
+export const Sidebar = ({ mobile, onClose }: SidebarProps) => {
     const location = useLocation();
 
     const navItems = [
@@ -32,81 +30,75 @@ export const Sidebar = ({ collapsed, setCollapsed, mobile, onClose }: SidebarPro
         { icon: Calculator, label: 'Estimation', path: '/estimation' },
     ];
 
-    return (
-        <aside
-            className={cn(
-                "bg-white border-r flex flex-col transition-all duration-300 ease-in-out z-20",
-                mobile ? "w-64 h-full" : collapsed ? "w-20" : "w-64",
-                mobile && "absolute top-0 left-0 bottom-0 shadow-2xl"
-            )}
-        >
-            <div className={cn("p-6 flex items-center justify-between", collapsed && !mobile && "justify-center p-4")}>
-                {!collapsed || mobile ? (
+    if (mobile) {
+        return (
+            <aside className="bg-white w-64 h-full flex flex-col shadow-2xl">
+                <div className="p-6 flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-blue-900 italic tracking-tighter">BLUE RHINE</h1>
                         <span className="text-[10px] tracking-[0.2em] text-gray-400 font-bold block uppercase">Industries</span>
                     </div>
-                ) : (
-                    <div className="w-10 h-10 bg-blue-900 rounded-lg flex items-center justify-center text-white font-bold italic">BR</div>
-                )}
-
-                {mobile && (
-                    <Button variant="ghost" size="icon" onClick={onClose} className="md:hidden">
+                    <Button variant="ghost" size="icon" onClick={onClose}>
                         <ChevronLeft className="w-5 h-5" />
                     </Button>
-                )}
-            </div>
-
-            <nav className="flex-1 p-3 space-y-2 mt-4">
-                {navItems.map((item) => (
-                    <Link
-                        key={item.label}
-                        to={item.path}
-                        onClick={mobile ? onClose : undefined}
-                        className={cn(
-                            "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative",
-                            location.pathname.startsWith(item.path) || item.active
-                                ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                                : "text-gray-500 hover:bg-blue-50 hover:text-blue-700",
-                            collapsed && !mobile && "justify-center px-2 py-3"
-                        )}
-                        title={collapsed ? item.label : undefined}
-                    >
-                        <item.icon className={cn("w-5 h-5 flex-shrink-0", location.pathname.startsWith(item.path) ? "text-white" : "text-gray-500 group-hover:text-blue-600")} />
-                        {(!collapsed || mobile) && <span>{item.label}</span>}
-
-                        {/* Tooltip for collapsed mode */}
-                        {collapsed && !mobile && (
-                            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
-                                {item.label}
-                            </div>
-                        )}
-                    </Link>
-                ))}
-            </nav>
-
-            {!mobile && (
-                <div className="p-4 border-t flex justify-center">
-                    <Button
-                        variant="ghost"
-                        size={collapsed ? "icon" : "sm"}
-                        onClick={() => setCollapsed(!collapsed)}
-                        className="text-gray-400 hover:text-gray-600"
-                    >
-                        {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-                    </Button>
                 </div>
-            )}
 
-            <div className="p-4 border-t">
-                <button className={cn(
-                    "flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors",
-                    collapsed && !mobile && "justify-center"
-                )}>
-                    <LogOut className="w-5 h-5" />
-                    {(!collapsed || mobile) && <span>Logout</span>}
-                </button>
+                <nav className="flex-1 p-3 space-y-2 mt-4">
+                    {navItems.map((item) => (
+                        <Link
+                            key={item.label}
+                            to={item.path}
+                            onClick={onClose}
+                            className={cn(
+                                "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                                location.pathname.startsWith(item.path) || item.active
+                                    ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                                    : "text-gray-500 hover:bg-blue-50 hover:text-blue-700"
+                            )}
+                        >
+                            <item.icon className={cn("w-5 h-5", location.pathname.startsWith(item.path) ? "text-white" : "text-gray-500")} />
+                            <span>{item.label}</span>
+                        </Link>
+                    ))}
+                </nav>
+            </aside>
+        );
+    }
+
+    return (
+        <nav className="bg-white border-b flex items-center justify-between px-4 md:px-8 h-16 shadow-sm z-30 sticky top-0 w-full">
+            <div className="flex items-center gap-8">
+                {/* Logo */}
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-900 rounded-lg flex items-center justify-center text-white font-bold italic text-xs">BR</div>
+                    <div className="hidden lg:block">
+                        <h1 className="text-lg font-bold text-blue-900 italic tracking-tighter leading-none">BLUE RHINE</h1>
+                        <span className="text-[8px] tracking-[0.2em] text-gray-400 font-bold block uppercase leading-none">Industries</span>
+                    </div>
+                </div>
+
+                {/* Desktop Navigation Items */}
+                <div className="hidden md:flex items-center gap-1">
+                    {navItems.map((item) => (
+                        <Link
+                            key={item.label}
+                            to={item.path}
+                            className={cn(
+                                "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                                location.pathname.startsWith(item.path) || item.active
+                                    ? "text-blue-700 bg-blue-50"
+                                    : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                            )}
+                        >
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                        </Link>
+                    ))}
+                </div>
             </div>
-        </aside>
+
+            {/* Right Side - kept minimal as requested (initially contained logout/profile) */}
+            {/* The user requested to remove logout and profile section, so we keep this empty or minimal */}
+        </nav>
     );
 };

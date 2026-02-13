@@ -10,26 +10,25 @@ export const LayoutContext = createContext<LayoutContextType>({ searchQuery: '' 
 export const useLayout = () => useContext(LayoutContext);
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
     return (
         <LayoutContext.Provider value={{ searchQuery }}>
-            <div className="min-h-screen bg-gray-50/50 flex overflow-hidden font-sans">
-                {/* Desktop Sidebar */}
-                <div className="hidden md:block h-screen shadow-xl z-20 sticky top-0">
-                    <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
+            <div className="min-h-screen bg-gray-50/50 flex flex-col font-sans">
+                {/* Top Navigation (formerly Sidebar) */}
+                <div className="hidden md:block sticky top-0 z-40">
+                    <Sidebar collapsed={false} setCollapsed={() => { }} />
                 </div>
 
-                {/* Mobile Sidebar (Drawer) */}
+                {/* Mobile Drawer */}
                 {mobileMenuOpen && (
                     <div className="fixed inset-0 z-50 md:hidden">
                         <div
                             className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
                             onClick={() => setMobileMenuOpen(false)}
                         ></div>
-                        <div className="absolute inset-y-0 left-0 w-64 animate-in slide-in-from-left duration-200">
+                        <div className="absolute inset-y-0 left-0 w-64 animate-in slide-in-from-left duration-200 z-50">
                             <Sidebar
                                 collapsed={false}
                                 setCollapsed={() => { }}
@@ -41,7 +40,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 )}
 
                 {/* Main Content Area */}
-                <div className="flex-1 flex flex-col h-screen overflow-hidden">
+                <div className="flex-1 flex flex-col overflow-hidden">
                     <Header
                         onMobileMenuToggle={() => setMobileMenuOpen(true)}
                         onSearch={setSearchQuery}

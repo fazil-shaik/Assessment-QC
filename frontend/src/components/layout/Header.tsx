@@ -1,6 +1,5 @@
-import { Search, Bell, User, Menu } from 'lucide-react';
+import { Search, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -18,7 +17,7 @@ export const Header = ({ onMobileMenuToggle, onSearch }: HeaderProps) => {
     };
 
     return (
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b sticky top-0 z-10 px-4 md:px-8 flex items-center justify-between transition-all">
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b sticky top-0 z-10 px-4 md:px-8 flex items-center justify-between transition-all md:hidden">
             <div className="flex items-center gap-4 flex-1">
                 <Button variant="ghost" size="icon" className="md:hidden" onClick={onMobileMenuToggle}>
                     <Menu className="w-6 h-6 text-gray-700" />
@@ -41,22 +40,7 @@ export const Header = ({ onMobileMenuToggle, onSearch }: HeaderProps) => {
             </div>
 
             <div className="flex items-center gap-3 md:gap-6">
-                <Button variant="ghost" size="icon" className="relative text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full">
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                </Button>
-
-                <div className="flex items-center gap-3 md:pl-6 md:border-l border-gray-100 cursor-pointer hover:opacity-80 transition-opacity">
-                    <div className="text-right hidden md:block">
-                        <p className="text-sm font-bold text-gray-800 leading-none">Mayank A.</p>
-                        <p className="text-[10px] uppercase tracking-wider text-gray-500 font-medium">Inspector</p>
-                    </div>
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 p-[2px]">
-                        <div className="h-full w-full rounded-full bg-white flex items-center justify-center">
-                            <User className="w-5 h-5 text-gray-700" />
-                        </div>
-                    </div>
-                </div>
+                {/* Profile section removed as requested */}
             </div>
         </header>
     );
